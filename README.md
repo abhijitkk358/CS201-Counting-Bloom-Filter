@@ -9,3 +9,4 @@ PPT Helper :
 Links : 
 https://medium.com/@humberto521336/bloom-filters-basics-c54ed06f8f73
 
+<img width="604" height="192" alt="image" src="https://github.com/user-attachments/assets/10c913fe-3ff9-4f12-93f1-19502ba93beb" />
