@@ -9,15 +9,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-#include <chrono>  // ⭐ ADDED: For runtime measurement
-
+#include <chrono>  // ADDED: For runtime measurement
+using namespace std;
 typedef uint32_t unsign32;
 typedef uint8_t unsign8;
 
-// ==================== HELPER FUNCTIONS ====================
 
 
-// Simple memory allocation helpers (no STL)
+
+// no STL
 template<typename T>
 T* allocate_array(unsign32 size) {
     T* arr = new T[size];
@@ -27,14 +27,14 @@ T* allocate_array(unsign32 size) {
     return arr;
 }
 
-
+//memory deallocator
 template<typename T>
 void deallocate_array(T* arr) {
     delete[] arr;
 }
 
 
-// String length helper
+// this gives string length without string header
 unsign32 str_length(const char* str) {
     unsign32 len = 0;
     while (str[len] != '\0') len++;
@@ -42,7 +42,7 @@ unsign32 str_length(const char* str) {
 }
 
 
-// ==================== MURMURHASH3 IMPLEMENTATION ====================
+//MURMURHASH3 IMPLEMENTATION 
 
 
 inline unsign32 rotl32(unsign32 x, int8_t r) {
@@ -61,7 +61,7 @@ inline unsign32 avalanche32(unsign32 h) {
 }
 
 
-// MurmurHash3 32-bit implementation
+//32-bit implementation
 unsign32 murmur3_hash(const void* key, unsign32 len, unsign32 seed) {
     const unsign8* data = (const unsign8*)key;
     const unsign32 nblocks = len / 4;
@@ -70,8 +70,8 @@ unsign32 murmur3_hash(const void* key, unsign32 len, unsign32 seed) {
     const unsign32 c1 = 0xcc9e2d51;
     const unsign32 c2 = 0x1b873593;
 
-
-    // Body - process 4 bytes at a time
+    //Head of data
+    // process 4 bytes at a time
     const unsign32* blocks = (const unsign32*)(data);
 
 
@@ -112,7 +112,7 @@ unsign32 murmur3_hash(const void* key, unsign32 len, unsign32 seed) {
 }
 
 
-// ==================== COUNTING BLOOM FILTER ====================
+//CBF
 
 
 class CountingBloomFilter {
@@ -120,10 +120,10 @@ private:
     unsign8* counters;     // Array of counters (not bits)
     unsign32 m;            // Size of counter array
     unsign32 k;            // Number of hash functions
-    unsign32 num_items;    // Track number of items for FP calculation
+    unsign32 num_items;    
 
 
-    // Generate k different hash values using double hashing
+    // Generates k different hash values using double hashing
     // h_i(x) = (hash1(x) + i * hash2(x)) mod m
     unsign32 get_hash(const char* item, unsign32 hash_num) {
         unsign32 len = str_length(item);
@@ -151,30 +151,30 @@ public:
     }
 
 
-    // Insert an item (increment counters) - VERBOSE VERSION
+  
     void insert(const char* item) {
-        std::cout << "\n[INSERT] Item: '" << item << "'\n";
+           cout << "\n[INSERT] Item: '" << item << "'\n";
         
         for (unsign32 i = 0; i < k; i++) {
             unsign32 index = get_hash(item, i);
-            std::cout << "  Hash " << (i+1) << ": position " << index 
+               cout << "  Hash " << (i+1) << ": position " << index 
                       << " (counter: " << (int)counters[index] 
                       << " -> " << (int)(counters[index]+1) << ")\n";
             
-            if (counters[index] < 255) {  // Prevent overflow
+            if (counters[index] < 255) {  // To Prevent overflow
                 counters[index]++;
             }
         }
         num_items++;
         
         // Show current parameters and false positive rate
-        std::cout << "  Current state: n=" << num_items 
+           cout << "  Current state: n=" << num_items 
                   << ", m=" << m << ", k=" << k 
                   << ", False positive rate =" << (get_false_positive_rate() * 100.0) 
                   << "%\n";
     }
 
-    // ⭐ ADDED: Silent insert (no output) for performance testing
+
     void insert_silent(const char* item) {
         for (unsign32 i = 0; i < k; i++) {
             unsign32 index = get_hash(item, i);
@@ -192,21 +192,21 @@ public:
     }
 
 
-    // Remove an item (decrement counters)
-    // This is the key advantage of counting Bloom filters
+    // Remove an item (decrement counters by 1 each)
+    // This is the key advantage of counting Bloom filters it can perform deletion
     void remove(const char* item) {
-        std::cout << "\n[REMOVE] Item: '" << item << "'\n";
+           cout << "\n[REMOVE] Item: '" << item << "'\n";
         
         // First check if item might be in the filter
         if (!query(item)) {
-            std::cout << "  Item not found in filter (all counters must be > 0)\n";
+               cout << "  Item not found in filter (all counters must be > 0)\n";
             return;  // Item definitely not in filter
         }
 
 
         for (unsign32 i = 0; i < k; i++) {
             unsign32 index = get_hash(item, i);
-            std::cout << "  Hash " << (i+1) << ": position " << index 
+               cout << "  Hash " << (i+1) << ": position " << index 
                       << " (counter: " << (int)counters[index] 
                       << " -> " << (int)(counters[index]-1) << ")\n";
             
@@ -219,7 +219,7 @@ public:
         }
         
         // Show current parameters and false positive rate
-        std::cout << "  Current state: n=" << num_items 
+           cout << "  Current state: n=" << num_items 
                   << ", m=" << m << ", k=" << k 
                   << ", P(fp)=" << (get_false_positive_rate() * 100.0) 
                   << " %\n";
@@ -228,34 +228,34 @@ public:
 
     
     
-    // Query with optional verbose output
+    // Query with optional details:: output
     bool query_verbose(const char* item, bool verbose = false) {
         if (verbose) {
-            std::cout << "\n[QUERY] Item: '" << item << "'\n";
+               cout << "\n[QUERY] Item: '" << item << "'\n";
         }
         
         for (unsign32 i = 0; i < k; i++) {
             unsign32 index = get_hash(item, i);
             
             if (verbose) {
-                std::cout << "  Hash " << (i+1) << ": position " << index 
+                   cout << "  Hash " << (i+1) << ": position " << index 
                           << " (counter = " << (int)counters[index] << ")" << '\n';
             }
             
             if (counters[index] == 0) {
                 if (verbose) {
-                    std::cout << "  Result: NOT FOUND (definitely not in filter)\n";
+                       cout << "  Result: NOT FOUND (definitely not in filter)\n";
                 }
-                return false;  // Definitely not in filter
+                return false;  // Item Definitely not in filter
             }
             if (verbose) {
-                std::cout << "\n";
+                cout << "\n";
             }
         }
         
         if (verbose) {
-            std::cout << "  Result: FOUND (probably in filter)\n";
-            std::cout << "  Current state: n=" << num_items 
+               cout << "  Result: FOUND (probably in filter)\n";
+               cout << "  Current state: n=" << num_items 
                       << ", m=" << m << ", k=" << k 
                       << ", P(fp)=" << (get_false_positive_rate() * 100.0) 
                       << "%\n";
@@ -295,55 +295,55 @@ public:
     // Print statistics with formulas
     void print_stats() {
        
-        std::cout << "    BLOOM FILTER STATISTICS        \n";
+           cout << "    BLOOM FILTER STATISTICS        \n";
         
-        std::cout << "PARAMETERS:\n";
-        std::cout << "  m (array size)      = " << m << "\n";
-        std::cout << "  k (hash functions)  = " << k << "\n";
-        std::cout << "  n (items inserted)  = " << num_items << "\n\n";
+           cout << "PARAMETERS:\n";
+           cout << "  m (array size)      = " << m << "\n";
+           cout << "  k (hash functions)  = " << k << "\n";
+           cout << "  n (items inserted)  = " << num_items << "\n\n";
         
         double load_factor = (double)num_items / (double)m;
         double fp_rate = get_false_positive_rate();
         
-        std::cout << " CALCULATED VALUES:\n";
-        std::cout << "Load factor (n/m)   = " << load_factor << "\n";
-        std::cout << "False positive rate = " << (fp_rate * 100.0) << " %\n\n";
+           cout << " CALCULATED VALUES:\n";
+           cout << "Load factor (n/m)   = " << load_factor << "\n";
+           cout << "False positive rate = " << (fp_rate * 100.0) << " %\n\n";
         
         double exponent = -(double)k * (double)num_items / (double)m;
        
-        std::cout << "False positive rate = " << (fp_rate * 100.0) << " %\n\n";
+           cout << "False positive rate = " << (fp_rate * 100.0) << " %\n\n";
         
-        std::cout << "OPTIMAL k :\n";
+           cout << "OPTIMAL k :\n";
         
         unsign32 optimal_k = calculate_optimal_k((unsign32)m, (unsign32)num_items);
-        std::cout << optimal_k << '\n';
+           cout << optimal_k << '\n';
     }
 };
 
 
-// ⭐ ADDED: Runtime measurement function
+// Runtime measurement function
 void measure_runtime_vs_k() {
-    std::cout << "\n========================================\n";
-    std::cout << "    RUNTIME vs K MEASUREMENT\n";
-    std::cout << "========================================\n\n";
+       cout << "\n========================================\n";
+       cout << "    RUNTIME vs K MEASUREMENT\n";
+       cout << "========================================\n\n";
     
     unsign32 m = 100000;          // Fixed filter size
     unsign32 num_inserts = 50000; // Number of operations
     
-    std::cout << "Configuration:\n";
-    std::cout << "  Filter size (m): " << m << "\n";
-    std::cout << "  Number of inserts: " << num_inserts << "\n";
-    std::cout << "  Testing k from 1 to 15\n\n";
+       cout << "Configuration:\n";
+       cout << "  Filter size (m): " << m << "\n";
+       cout << "  Number of inserts: " << num_inserts << "\n";
+       cout << "  Testing k from 1 to 15\n\n";
     
-    std::cout << "Results (CSV format):\n";
-    std::cout << "k,runtime_ms,time_per_op_us\n";
-    std::cout << "-----------------------------------\n";
+       cout << "Results (CSV format):\n";
+       cout << "k,runtime_ms,time_per_op_us\n";
+       cout << "-----------------------------------\n";
     
     for (unsign32 k = 1; k <= 15; k++) {
         CountingBloomFilter filter(m, k);
         
         // Start timing
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start =    chrono::high_resolution_clock::now();
         
         // Perform inserts (silent, no output)
         for (unsign32 i = 0; i < num_inserts; i++) {
@@ -353,36 +353,36 @@ void measure_runtime_vs_k() {
         }
         
         // End timing
-        auto end = std::chrono::high_resolution_clock::now();
+        auto end =    chrono::high_resolution_clock::now();
         
         // Calculate duration
-        double runtime_ms = std::chrono::duration<double, std::milli>(end - start).count();
+        double runtime_ms =    chrono::duration<double,    milli>(end - start).count();
         double time_per_op_us = (runtime_ms * 1000.0) / num_inserts;
         
         // Output results
-        std::cout << k << "," << runtime_ms << "," << time_per_op_us << "\n";
+           cout << k << "," << runtime_ms << "," << time_per_op_us << "\n";
     }
     
-    std::cout << "\n========================================\n";
-    std::cout << "Analysis:\n";
-    std::cout << "  If runtime grows linearly with k,\n";
-    std::cout << "  then complexity is O(k) ✓\n";
-    std::cout << "========================================\n\n";
+       cout << "\n========================================\n";
+       cout << "Analysis:\n";
+       cout << "  If runtime grows linearly with k,\n";
+       cout << "  then complexity is O(k) ✓\n";
+       cout << "========================================\n\n";
 }
 
 
-// ==================== DEMONSTRATION ====================
+
 
 
 int main() {
-    std::cout << "Counting Bloom Filter \n";
+       cout << "Counting Bloom Filter \n";
 
-    // ⭐ FIRST: Run runtime measurement
+    // Run runtime measurement
     measure_runtime_vs_k();
 
-    std::cout << "\n\n========================================\n";
-    std::cout << "    REGULAR DEMONSTRATION\n";
-    std::cout << "========================================\n\n";
+       cout << "\n\n========================================\n";
+       cout << "    REGULAR DEMONSTRATION\n";
+       cout << "========================================\n\n";
 
     // Configurable parameters
     unsign32 m = 1000;        // Size of counter array
@@ -390,7 +390,7 @@ int main() {
     
     // Calculate optimal k
     unsign32 k = CountingBloomFilter::calculate_optimal_k(m, expected_n);
-    std::cout << "Optimal k for m = " << m << ", n=" << expected_n 
+       cout << "Optimal k for m = " << m << ", n=" << expected_n 
               << ": " << k << "\n\n";
 
 
@@ -399,7 +399,7 @@ int main() {
 
 
     // Insert items
-    std::cout << "Inserting items...\n";
+       cout << "Inserting items...\n";
     filter.insert("apple");
     filter.insert("banana");
     filter.insert("cherry");
@@ -410,7 +410,7 @@ int main() {
    
 
 
-    std::cout << "QUERYING ITEMS (with hash positions)\n";
+       cout << "QUERYING ITEMS\n";
 
 
     
@@ -423,7 +423,7 @@ int main() {
     // Remove an item (counting bloom filter feature!)
 
 
-    std::cout << "TESTING REMOVAL (Counting Bloom Filter Feature)\n";
+       cout << "TESTING REMOVAL\n";
  
     
     filter.remove("banana");
@@ -434,8 +434,8 @@ int main() {
     filter.print_stats();
 
 
-    std::cout << "\n=== Testing with different parameters ===\n";
-    
+       cout << "\nTesting with different parameters \n";
+
     // Change m and k 
     CountingBloomFilter small_filter(100, 3); 
     for (int i = 0; i < 10; i++) {
@@ -451,3 +451,4 @@ int main() {
 
     return 0;
 }
+
