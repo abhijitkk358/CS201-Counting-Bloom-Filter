@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Your actual data from running the C++ program
+#  actual data from running the C++ program
 data_text = """k,runtime_ms,time_per_op_us
 1,18.1302,0.362604
 2,34.8234,0.696468
@@ -20,7 +20,7 @@ data_text = """k,runtime_ms,time_per_op_us
 15,171.703,3.43407"""
 
 # Parse data
-lines = data_text.strip().split('\n')[1:]  # Skip header
+lines = data_text.strip().split('\n')[1:] 
 k_vals = []
 runtime_vals = []
 time_per_op_vals = []
@@ -31,7 +31,7 @@ for line in lines:
     runtime_vals.append(float(parts[1]))
     time_per_op_vals.append(float(parts[2]))
 
-# Convert to numpy arrays
+
 k = np.array(k_vals)
 runtime_ms = np.array(runtime_vals)
 time_per_op = np.array(time_per_op_vals)
@@ -61,3 +61,4 @@ plt.tight_layout()
 plt.savefig('bloom_filter_runtime.png', dpi=300, bbox_inches='tight')
 print("✓ Graph saved as 'bloom_filter_runtime.png'")
 plt.show()
+
